@@ -8,4 +8,4 @@ To replicate the experiments, download the clinical records from [MEDDOCAN datas
 
     $ sudo pip install -r requirements.txt
 
-The initial experiments with CRF were based on Albert Au Yeung's article, ["Performing Sequence Labelling using CRF in Python"](http://www.albertauyeung.com/post/python-sequence-labelling-with-crf/).
+The initial experiments using CRF in Python were made based on Albert Au Yeung's article, "[Performing Sequence Labelling using CRF in Python](http://www.albertauyeung.com/post/python-sequence-labelling-with-crf/)".
