@@ -1,3 +1,6 @@
 nltk
 progressbar2
 beautifulsoup4
+python-crfsuite
+numpy
+scikit_learn
