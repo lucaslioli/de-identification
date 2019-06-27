@@ -103,6 +103,9 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# vscode files
+.vscode/*
+
 # Dataset
 MEDDOCAN/*
 gazetteer/*

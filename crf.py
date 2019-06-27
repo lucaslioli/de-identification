@@ -1,24 +1,29 @@
-import glob                                         # Read files from folder
-import string                                       # Remove the ponctuation from the texts
-import pycrfsuite                                   # Python implementation of Conditional Random Fields
-import progressbar                                  # Print progress bar
-import numpy as np                                  # Used in the evaluation process
-from pprint import pprint                           # Data pretty printer
-from bs4 import BeautifulSoup as bs                 # Parse XML files
-from nltk.corpus import stopwords                   # Methods to remove stop words
-from nltk import pos_tag                            # Methods generating Part-of-Speech tags
-from sklearn.metrics import classification_report   # Used to evaluate the results
+import sys                                              # Recive params from line command
+import glob                                             # Read files from folder
+import string                                           # Remove the ponctuation from the texts
+import pycrfsuite                                       # Python implementation of Conditional Random Fields
+import progressbar                                      # Print progress bar
+import numpy as np                                      # Used in the evaluation process
+from pprint import pprint                               # Data pretty printer
+from bs4 import BeautifulSoup as bs                     # Parse XML files
+from nltk.corpus import stopwords                       # Methods to remove stop words
+from nltk import pos_tag                                # Methods generating Part-of-Speech tags
+from sklearn.model_selection import train_test_split    # Divide train and test set
+from sklearn.metrics import classification_report       # Used to evaluate the results
+from sklearn.metrics import confusion_matrix            # Print confusion matrix
 
-TRAIN = "train"
-TEST = "test"
+FOLDER = "MEDDOCAN"
+TRAIN = "MEDDOCAN/train-set/xml"
+TEST = "MEDDOCAN/test-set/xml"
+MODEL = 'crf.model'
 
 # A function to prepare the data to fit with the need format
-def prepare_data(dataset):
-    print("Preparing data for {}ing...".format(dataset))
+def prepare_data(path = FOLDER):
+    print("\nPreparing data from {}/ ...".format(path))
     progressbar.streams.wrap_stderr()
 
-    # Get all XML files from the specific dataset 
-    files = glob.glob("MEDDOCAN/{}-set/xml/*.xml".format(dataset))
+    # Get all XML files from a folder
+    files = glob.glob("{}/**/*.xml".format(path), recursive=True)
 
     docs = []
 
@@ -83,8 +88,8 @@ def text_cleaner(text):
     return text
 
 # A function to generate the Part-of-Speech tags for each document
-def pos_tagging(docs, dataset):
-    print("Generating Part-of-Speech tags for {}ing set...".format(dataset))
+def pos_tagging(docs):
+    print("\nGenerating Part-of-Speech tags...")
 
     data = []
     for doc in progressbar.progressbar(docs):
@@ -157,39 +162,29 @@ def get_labels(doc):
     return [label for (token, postag, label) in doc]
 
 # A function to group the process of extract features and get the labels
-def features_and_labels(train_data, test_data):
-    #TRAINING DATA
-    print("Extracting features from {}ing set...".format(TRAIN))
-    X_train = [extract_features(doc) for doc in progressbar.progressbar(train_data)]
+def features_and_labels(pos_tag_data):
+    print("\nPreparing data for training and testing...")
+    features = [extract_features(doc) for doc in progressbar.progressbar(pos_tag_data)]
 
-    print("Getting labels from {}ing set...".format(TRAIN))
-    y_train = [get_labels(doc) for doc in progressbar.progressbar(train_data)]
+    labels = [get_labels(doc) for doc in pos_tag_data]
 
-    # TESTING DATA
-    print("Extracting features from {}ing set...".format(TEST))
-    X_test = [extract_features(doc) for doc in progressbar.progressbar(test_data)]
+    # Return as x_train, x_test, y_train, y_test
+    return train_test_split(features, labels, test_size=0.2)
 
-    print("Getting labels from {}ing set...".format(TEST))
-    y_test = [get_labels(doc) for doc in progressbar.progressbar(test_data)]
+# Training CRF model
+def crf_model_training(x_train, y_train, print_verbose = False):
+    trainer = pycrfsuite.Trainer(verbose=print_verbose)
 
-    return X_train, y_train, X_test, y_test
+    print("\nTraining model...")
 
-if __name__ == '__main__':
-    train_docs = prepare_data(TRAIN)
-    train_data = pos_tagging(train_docs, TRAIN)
-
-    test_docs = prepare_data(TEST)
-    test_data = pos_tagging(test_docs, TEST)
-
-    X_train, y_train, X_test, y_test = features_and_labels(train_data, test_data)
-
-    trainer = pycrfsuite.Trainer(verbose=False)
-
-    print("Training model...")
+    bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
+    i = 1
 
     # Submit training data to the trainer
-    for xseq, yseq in zip(X_train, y_train):
+    for xseq, yseq in zip(x_train, y_train):
         trainer.append(xseq, yseq)
+        bar.update(i)
+        i+=1
 
     # Set the parameters of the model
     trainer.set_params({
@@ -209,18 +204,20 @@ if __name__ == '__main__':
 
     # Provide a file name as a parameter to the train function, such that
     # the model will be saved to the file when training is finished
-    trainer.train('crf.model')
+    trainer.train(MODEL)
 
-    tagger = pycrfsuite.Tagger()
-    tagger.open('crf.model')
-    y_pred = [tagger.tag(xseq) for xseq in X_test]
+# Evaluate the results from model from predictions
+def results_evaluation(y_test, y_pred, print_check = False):
 
-    # # Let's take a look at a random sample in the testing set
-    # i = 12
-    # for x, y in zip(y_pred[i], [x[1].split("=")[1] for x in X_test[i]]):
-    #     print("%s (%s)" % (y, x))
+    if(print_check):
+        print("\nChecking results...")
 
-    print("Evaluating results...")
+        # Let's take a look at a random sample in the testing set
+        i = 12
+        for x, y in zip(y_pred[i], [x[1].split("=")[1] for x in x_test[i]]):
+            print("%s (%s)" % (y, x))
+
+    print("\n\nResults Evaluation:")
 
     # Create a mapping of labels to indices
     labels = {"PHI": 1, "NOT": 0}
@@ -233,3 +230,26 @@ if __name__ == '__main__':
     print(classification_report(
         truths, predictions,
         target_names=["NOT", "PHI"]))
+
+    print("\nConfusion Matrix:")
+    
+    print(confusion_matrix(truths, predictions))
+
+if __name__ == '__main__':
+    args = {}
+    args['print_verbose'] = len(sys.argv) >= 3 if True else False
+    args['print_check'] = len(sys.argv) >= 2 if True else False
+
+    docs = prepare_data(FOLDER)
+    
+    pos_tag_data = pos_tagging(docs)
+
+    x_train, x_test, y_train, y_test = features_and_labels(pos_tag_data)
+
+    crf_model_training(x_train, y_train, args['print_verbose'])
+
+    tagger = pycrfsuite.Tagger()
+    tagger.open(MODEL)
+    y_pred = [tagger.tag(xseq) for xseq in x_test]
+
+    results_evaluation(y_test, y_pred, args['print_check'])
