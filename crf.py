@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split    # Divide train and test 
 from sklearn.metrics import classification_report       # Used to evaluate the results
 from sklearn.metrics import confusion_matrix            # Print confusion matrix
 
+LANGUAGE = "spanish"
 FOLDER = "MEDDOCAN"
 TRAIN = "MEDDOCAN/train-set/xml"
 TEST = "MEDDOCAN/test-set/xml"
@@ -72,7 +73,7 @@ def prepare_data(path = FOLDER):
 # A function to preprocess and make a base clean of text
 def text_cleaner(text):
     # Getting the set of stop words
-    stop = set(stopwords.words('spanish'))
+    stop = set(stopwords.words(LANGUAGE))
 
     # Getting the set of punctuation
     pont=set(string.punctuation)
@@ -177,14 +178,14 @@ def crf_model_training(x_train, y_train, print_verbose = False):
 
     print("\nTraining model...")
 
-    bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
-    i = 1
+    # bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
+    # i = 1
+    # bar.update(i)
+    # i+=1
 
     # Submit training data to the trainer
     for xseq, yseq in zip(x_train, y_train):
         trainer.append(xseq, yseq)
-        bar.update(i)
-        i+=1
 
     # Set the parameters of the model
     trainer.set_params({
@@ -205,6 +206,7 @@ def crf_model_training(x_train, y_train, print_verbose = False):
     # Provide a file name as a parameter to the train function, such that
     # the model will be saved to the file when training is finished
     trainer.train(MODEL)
+    print("Model Trained!\n")
 
 # Evaluate the results from model from predictions
 def results_evaluation(y_test, y_pred, print_check = False):
@@ -234,6 +236,7 @@ def results_evaluation(y_test, y_pred, print_check = False):
     print("\nConfusion Matrix:")
     
     print(confusion_matrix(truths, predictions))
+    print("\n")
 
 if __name__ == '__main__':
     args = {}
