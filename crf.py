@@ -4,22 +4,21 @@ import string                                           # Remove the ponctuation
 import pycrfsuite                                       # Python implementation of Conditional Random Fields
 import progressbar                                      # Print progress bar
 import numpy as np                                      # Used in the evaluation process
-from pprint import pprint                               # Data pretty printer
 from bs4 import BeautifulSoup as bs                     # Parse XML files
 from nltk.corpus import stopwords                       # Methods to remove stop words
-from nltk import pos_tag                                # Methods generating Part-of-Speech tags
+from nltk.tag.stanford import StanfordPOSTagger         # Methods generating Part-of-Speech tags
 from sklearn.model_selection import train_test_split    # Divide train and test set
-from sklearn.metrics import classification_report       # Used to evaluate the results
-from sklearn.metrics import confusion_matrix            # Print confusion matrix
+from sklearn.metrics import classification_report, confusion_matrix # Evaluate the results and print the confusion matrix
 
-LANGUAGE = "spanish"
-FOLDER = "MEDDOCAN"
-TRAIN = "MEDDOCAN/train-set/xml"
-TEST = "MEDDOCAN/test-set/xml"
-MODEL = 'crf.model'
+CRF_MODEL = 'crf.model'
+STANFORD_PATH = "/home/pc/nltk_data/StanfordNLP/stanford-postagger-full-2017-06-09"
+POS_TAGGER = "spanish-ud"                               # english-bidirectional-distsim
+DATA_PATH = "dataset/MEDDOCAN"                          # 2014i2b2
+LANGUAGE = "spanish"                                    # english
+MAINTAG = "meddocan"                                    # deidi2b2
 
 # A function to prepare the data to fit with the need format
-def prepare_data(path = FOLDER):
+def prepare_data(path = DATA_PATH):
     print("\nPreparing data from {}/ ...".format(path))
     progressbar.streams.wrap_stderr()
 
@@ -35,7 +34,7 @@ def prepare_data(path = FOLDER):
             soup = bs(infile, "html.parser")
 
         # Get the main tag in the file
-        elem = soup.find("meddocan")
+        elem = soup.find(MAINTAG)
 
         # Get the pacient note text
         record = elem.find("text").text
@@ -92,6 +91,11 @@ def text_cleaner(text):
 def pos_tagging(docs):
     print("\nGenerating Part-of-Speech tags...")
 
+    # Configuring Stanford NLP POS tagger
+    path_to_model = "{}/models/{}.tagger".format(STANFORD_PATH, POS_TAGGER)
+    path_to_jar = "{}/stanford-postagger.jar".format(STANFORD_PATH)
+    tagger = StanfordPOSTagger(path_to_model, path_to_jar)
+
     data = []
     for doc in progressbar.progressbar(docs):
 
@@ -99,7 +103,7 @@ def pos_tagging(docs):
         tokens = [t for t, label in doc]
 
         # Perform POS tagging
-        tagged = pos_tag(tokens)
+        tagged = tagger.tag(tokens)
 
         # Take the word, POS tag, and its label
         data.append([(w, pos, label) for (w, label), (word, pos) in zip(doc, tagged)])
@@ -178,11 +182,6 @@ def crf_model_training(x_train, y_train, print_verbose = False):
 
     print("\nTraining model...")
 
-    # bar = progressbar.ProgressBar(max_value=progressbar.UnknownLength)
-    # i = 1
-    # bar.update(i)
-    # i+=1
-
     # Submit training data to the trainer
     for xseq, yseq in zip(x_train, y_train):
         trainer.append(xseq, yseq)
@@ -205,7 +204,7 @@ def crf_model_training(x_train, y_train, print_verbose = False):
 
     # Provide a file name as a parameter to the train function, such that
     # the model will be saved to the file when training is finished
-    trainer.train(MODEL)
+    trainer.train(CRF_MODEL)
     print("Model Trained!\n")
 
 # Evaluate the results from model from predictions
@@ -243,7 +242,7 @@ if __name__ == '__main__':
     args['print_verbose'] = len(sys.argv) >= 3 if True else False
     args['print_check'] = len(sys.argv) >= 2 if True else False
 
-    docs = prepare_data(FOLDER)
+    docs = prepare_data(DATA_PATH)
     
     pos_tag_data = pos_tagging(docs)
 
@@ -252,7 +251,7 @@ if __name__ == '__main__':
     crf_model_training(x_train, y_train, args['print_verbose'])
 
     tagger = pycrfsuite.Tagger()
-    tagger.open(MODEL)
+    tagger.open(CRF_MODEL)
     y_pred = [tagger.tag(xseq) for xseq in x_test]
 
     results_evaluation(y_test, y_pred, args['print_check'])
