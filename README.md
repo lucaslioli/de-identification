@@ -4,7 +4,7 @@ Experiments using CRF in Python for de-identification of clinical records. The d
 
 To replicate the experiments, download the clinical records from [MEDDOCAN datasets](http://temu.bsc.es/meddocan/index.php/data/) and paste it to the folder ```MEDDOCAN/```. Also, download the gazetteers from [MEDDOCAN resources](http://temu.bsc.es/meddocan/index.php/resources/) and paste it to the folder ```gazetteer/```, both inside the repository folder.
 
-The initial experiments using CRF in Python were made based on Albert Au Yeung's article, "[Performing Sequence Labelling using CRF in Python](http://www.albertauyeung.com/post/python-sequence-labelling-with-crf/)".
+The initial experiments using CRF in Python were made based on Albert Au Yeung's article, "[Performing Sequence Labelling using CRF in Python](http://www.albertauyeung.com/post/python-sequence-labelling-with-crf/)". Currently, many modifications have been done, such as the POS tagger used, CRF model used and the code organization.
 
 ## Requirements
 
@@ -18,3 +18,17 @@ After install all requirements it's also nedeed to download the following packag
     >>> import nltk
     >>> nltk.download('averaged_perceptron_tagger')
     >>> nltk.download('stopwords')
+
+### Part-of-Speech Tagger
+
+As part of the requirements, it's needed to download the respectively POS tagger from [Stanford NLP](https://nlp.stanford.edu/software/tagger.html) and extract the content into any folder. The experiments using MEDDOCAN dataset have been done using the full version 3.8.0, described as ```new Spanish and French UD models```.
+
+## Settings
+
+To increase the number of experiments and compare the results using other datasets, some params were defined to allow an easy change of the dataset used. The file ```config.py``` can be ajusted as your needs, as the following settings.
+
+* ```lang``` - Dataset language
+* ```data_path``` - Path to folder were the dataset is located
+* ```stanford_path``` - Path to the folder were Stanford NLP POS Tagger is located
+* ```pos_tagger``` - The suitable tagger for dataset language (located inside ```models``` folder) 
+* ```crf_model``` - The name that will be used to save the CRF model.

@@ -10,15 +10,10 @@ from nltk.tag.stanford import StanfordPOSTagger         # Methods generating Par
 from sklearn.model_selection import train_test_split    # Divide train and test set
 from sklearn.metrics import classification_report, confusion_matrix # Evaluate the results and print the confusion matrix
 
-CRF_MODEL = 'crf.model'
-STANFORD_PATH = "/home/pc/nltk_data/StanfordNLP/stanford-postagger-full-2017-06-09"
-POS_TAGGER = "spanish-ud"                               # english-bidirectional-distsim
-DATA_PATH = "dataset/MEDDOCAN"                          # 2014i2b2
-LANGUAGE = "spanish"                                    # english
-MAINTAG = "meddocan"                                    # deidi2b2
+from config import *
 
 # A function to prepare the data to fit with the need format
-def prepare_data(path = DATA_PATH):
+def prepare_data(path, language):
     print("\nPreparing data from {}/ ...".format(path))
     progressbar.streams.wrap_stderr()
 
@@ -33,17 +28,14 @@ def prepare_data(path = DATA_PATH):
         with open(file, mode='r', encoding='utf-8-sig') as infile:
             soup = bs(infile, "html.parser")
 
-        # Get the main tag in the file
-        elem = soup.find(MAINTAG)
-
         # Get the pacient note text
-        record = elem.find("text").text
+        record = soup.find("text").text
 
         pos = []
         pos.append(0)
 
         # Build array with all positions of PHI annotated
-        for phi in elem.find("tags").findAll():
+        for phi in soup.find("tags").findAll():
             pos.append(int(phi.get('start')))
             pos.append(int(phi.get('end')))
 
@@ -52,7 +44,7 @@ def prepare_data(path = DATA_PATH):
         texts = []
 
         for i in range(len(pos)-1):
-            info = text_cleaner(record[pos[i] : pos[i+1]])
+            info = text_cleaner(record[pos[i] : pos[i+1]], language)
 
             if i % 2 == 0:
                 label = "NOT"
@@ -70,9 +62,9 @@ def prepare_data(path = DATA_PATH):
     return docs
 
 # A function to preprocess and make a base clean of text
-def text_cleaner(text):
+def text_cleaner(text, language):
     # Getting the set of stop words
-    stop = set(stopwords.words(LANGUAGE))
+    stop = set(stopwords.words(language))
 
     # Getting the set of punctuation
     pont=set(string.punctuation)
@@ -88,12 +80,12 @@ def text_cleaner(text):
     return text
 
 # A function to generate the Part-of-Speech tags for each document
-def pos_tagging(docs):
+def pos_tagging(docs, stanford_path, pos_tagger):
     print("\nGenerating Part-of-Speech tags...")
 
     # Configuring Stanford NLP POS tagger
-    path_to_model = "{}/models/{}.tagger".format(STANFORD_PATH, POS_TAGGER)
-    path_to_jar = "{}/stanford-postagger.jar".format(STANFORD_PATH)
+    path_to_model = "{}/models/{}.tagger".format(stanford_path, pos_tagger)
+    path_to_jar = "{}/stanford-postagger.jar".format(stanford_path)
     tagger = StanfordPOSTagger(path_to_model, path_to_jar)
 
     data = []
@@ -177,7 +169,7 @@ def features_and_labels(pos_tag_data):
     return train_test_split(features, labels, test_size=0.2)
 
 # Training CRF model
-def crf_model_training(x_train, y_train, print_verbose = False):
+def crf_model_training(x_train, y_train, f_model = 'crf.model', print_verbose = False):
     trainer = pycrfsuite.Trainer(verbose=print_verbose)
 
     print("\nTraining model...")
@@ -204,11 +196,11 @@ def crf_model_training(x_train, y_train, print_verbose = False):
 
     # Provide a file name as a parameter to the train function, such that
     # the model will be saved to the file when training is finished
-    trainer.train(CRF_MODEL)
+    trainer.train(f_model)
     print("Model Trained!\n")
 
 # Evaluate the results from model from predictions
-def results_evaluation(y_test, y_pred, print_check = False):
+def results_evaluation(x_test, y_test, y_pred, print_check = False):
 
     if(print_check):
         print("\nChecking results...")
@@ -238,20 +230,26 @@ def results_evaluation(y_test, y_pred, print_check = False):
     print("\n")
 
 if __name__ == '__main__':
-    args = {}
-    args['print_verbose'] = len(sys.argv) >= 3 if True else False
-    args['print_check'] = len(sys.argv) >= 2 if True else False
+    if(len(sys.argv) < 2):
+        print("You need to inform the dataset.")
+        exit(1)
 
-    docs = prepare_data(DATA_PATH)
+    args = set_params(sys.argv)
+
+    if(len(args) == 0):
+        print("This is not valid dataset.")
+        exit(1)
+
+    docs = prepare_data(args['DATA_PATH'], args['LANGUAGE'])
     
-    pos_tag_data = pos_tagging(docs)
+    pos_tag_data = pos_tagging(docs, args['STANFORD_PATH'], args['POS_TAGGER'])
 
     x_train, x_test, y_train, y_test = features_and_labels(pos_tag_data)
 
-    crf_model_training(x_train, y_train, args['print_verbose'])
+    crf_model_training(x_train, y_train, args['CRF_MODEL'], args['PRINT_VERBOSE'])
 
     tagger = pycrfsuite.Tagger()
-    tagger.open(CRF_MODEL)
+    tagger.open(args['CRF_MODEL'])
     y_pred = [tagger.tag(xseq) for xseq in x_test]
 
-    results_evaluation(y_test, y_pred, args['print_check'])
+    results_evaluation(x_test, y_test, y_pred, args['PRINT_CHECK'])
