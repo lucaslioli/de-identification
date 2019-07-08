@@ -1,6 +1,5 @@
 import sys                                              # Recive params from line command
 import glob                                             # Read files from folder
-import string                                           # Remove the ponctuation from the texts
 import pycrfsuite                                       # Python implementation of Conditional Random Fields
 import progressbar                                      # Print progress bar
 import numpy as np                                      # Used in the evaluation process
@@ -15,7 +14,6 @@ from config import *
 # A function to prepare the data to fit with the need format
 def prepare_data(path, language):
     print("\nPreparing data from {}/ ...".format(path))
-    progressbar.streams.wrap_stderr()
 
     # Get all XML files from a folder
     files = glob.glob("{}/**/*.xml".format(path), recursive=True)
@@ -67,13 +65,16 @@ def text_cleaner(text, language):
     stop = set(stopwords.words(language))
 
     # Getting the set of punctuation
-    pont=set(string.punctuation)
+    pont={'.', ',', '_', '^', '*'}
 
     # To remove the stop words from the text
     text = ' '.join([w for w in text.split() if w not in stop])
 
-    # To remove the ponctuation from the text
+    # Remove the (setted) ponctuation from the text
     text = ''.join(c for c in text if c not in pont)
+
+    # Removes the line breaks
+    text = text.replace('\n', ' ').replace('\r', '')
 
     text = text.lstrip().rstrip().replace(u'\ufeff', '')
 
@@ -86,11 +87,13 @@ def pos_tagging(docs, stanford_path, pos_tagger):
     # Configuring Stanford NLP POS tagger
     path_to_model = "{}/models/{}.tagger".format(stanford_path, pos_tagger)
     path_to_jar = "{}/stanford-postagger.jar".format(stanford_path)
-    tagger = StanfordPOSTagger(path_to_model, path_to_jar)
+
+    tagger = StanfordPOSTagger(model_filename=path_to_model, path_to_jar=path_to_jar)
+    # Setting higher memory limit for long sentences
+    tagger.java_options='-mx8192m'
 
     data = []
     for doc in progressbar.progressbar(docs):
-
         # Obtain the list of tokens in the document
         tokens = [t for t, label in doc]
 
@@ -239,6 +242,8 @@ if __name__ == '__main__':
     if(len(args) == 0):
         print("This is not valid dataset.")
         exit(1)
+    
+    progressbar.streams.wrap_stderr()
 
     docs = prepare_data(args['DATA_PATH'], args['LANGUAGE'])
     
