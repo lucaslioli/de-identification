@@ -3,7 +3,7 @@ def set_params(args):
     params = {}
 
     # General settings
-    params['CRF_MODEL'] = 'crf.model'
+    params['CRF_MODEL'] = 'models/{}-crf.model'.format(args[1])
     params['STANFORD_PATH'] = "/home/pc/nltk_data/StanfordNLP/stanford-postagger-full-2017-06-09"
 
     # MEDDOCAN dataset settings

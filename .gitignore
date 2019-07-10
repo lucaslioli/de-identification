@@ -104,11 +104,11 @@ venv.bak/
 .mypy_cache/
 
 # vscode files
-.vscode/*
+.vscode/
 
 # Dataset
-dataset/*
-gazetteer/*
+dataset/
+gazetteer/
 
-# Trained model
-crf.model
+# Trained models
+models/
