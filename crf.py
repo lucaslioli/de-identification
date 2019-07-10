@@ -4,7 +4,6 @@ import pycrfsuite                                       # Python implementation 
 import progressbar                                      # Print progress bar
 import numpy as np                                      # Used in the evaluation process
 from bs4 import BeautifulSoup as bs                     # Parse XML files
-from nltk.corpus import stopwords                       # Methods to remove stop words
 from nltk.tag.stanford import StanfordPOSTagger         # Methods generating Part-of-Speech tags
 from sklearn.model_selection import train_test_split    # Divide train and test set
 from sklearn.metrics import classification_report, confusion_matrix # Evaluate the results and print the confusion matrix
@@ -12,7 +11,7 @@ from sklearn.metrics import classification_report, confusion_matrix # Evaluate t
 from config import *
 
 # A function to prepare the data to fit with the need format
-def prepare_data(path, language):
+def prepare_data(path):
     print("\nPreparing data from {}/ ...".format(path))
 
     # Get all XML files from a folder
@@ -42,7 +41,7 @@ def prepare_data(path, language):
         texts = []
 
         for i in range(len(pos)-1):
-            info = text_cleaner(record[pos[i] : pos[i+1]], language)
+            info = record[pos[i] : pos[i+1]]
 
             if i % 2 == 0:
                 label = "NOT"
@@ -58,27 +57,6 @@ def prepare_data(path, language):
 
         docs.append(texts)
     return docs
-
-# A function to preprocess and make a base clean of text
-def text_cleaner(text, language):
-    # Getting the set of stop words
-    stop = set(stopwords.words(language))
-
-    # Getting the set of punctuation
-    pont={'.', ',', '_', '^', '*'}
-
-    # To remove the stop words from the text
-    text = ' '.join([w for w in text.split() if w not in stop])
-
-    # Remove the (setted) ponctuation from the text
-    text = ''.join(c for c in text if c not in pont)
-
-    # Removes the line breaks
-    text = text.replace('\n', ' ').replace('\r', '')
-
-    text = text.lstrip().rstrip().replace(u'\ufeff', '')
-
-    return text
 
 # A function to generate the Part-of-Speech tags for each document
 def pos_tagging(docs, stanford_path, pos_tagger):
@@ -97,8 +75,11 @@ def pos_tagging(docs, stanford_path, pos_tagger):
         # Obtain the list of tokens in the document
         tokens = [t for t, label in doc]
 
-        # Perform POS tagging
-        tagged = tagger.tag(tokens)
+        try:
+            # Perform POS tagging
+            tagged = tagger.tag(tokens)
+        except:
+            continue
 
         # Take the word, POS tag, and its label
         data.append([(w, pos, label) for (w, label), (word, pos) in zip(doc, tagged)])
@@ -245,7 +226,7 @@ if __name__ == '__main__':
     
     progressbar.streams.wrap_stderr()
 
-    docs = prepare_data(args['DATA_PATH'], args['LANGUAGE'])
+    docs = prepare_data(args['DATA_PATH'])
     
     pos_tag_data = pos_tagging(docs, args['STANFORD_PATH'], args['POS_TAGGER'])
 
