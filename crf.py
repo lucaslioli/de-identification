@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split    # Divide train and test 
 from sklearn.metrics import classification_report, confusion_matrix # Evaluate the results and print the confusion matrix
 
 from config import *
+from resources.text_processing import simple_cleaner
 
 # A function to prepare the data to fit with the need format
 def prepare_data(path):
@@ -28,7 +29,10 @@ def prepare_data(path):
         # Get the pacient note text
         record = soup.find("text").text
 
+        # Array that will save all positions to define PHI
         pos = []
+
+        # Add the first position
         pos.append(0)
 
         # Build array with all positions of PHI annotated
@@ -36,13 +40,20 @@ def prepare_data(path):
             pos.append(int(phi.get('start')))
             pos.append(int(phi.get('end')))
 
+        # Add the last position
         pos.append(len(record)-1)
 
+        # Array that will save all the words with each label
         texts = []
 
         for i in range(len(pos)-1):
+            # Entire phrase between the defined positions
             info = record[pos[i] : pos[i+1]]
+            
+            info = simple_cleaner(info)
 
+            # Considering that the first word will never be a PHI,
+            # when the position is EVEN, the label is NOT
             if i % 2 == 0:
                 label = "NOT"
             else:

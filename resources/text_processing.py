@@ -14,9 +14,16 @@ def text_cleaner(text, language):
     # Remove the (setted) ponctuation from the text
     text = ''.join(c for c in text if c not in pont)
 
-    # Removes the line breaks
+    # Remove line breaks and special characters
+    text = simple_cleaner(text)
+
+    return text
+
+def simple_cleaner(text):
+    # Remove line breaks
     text = text.replace('\n', ' ').replace('\r', '')
 
+    # Remove especial characters
     text = text.lstrip().rstrip().replace(u'\ufeff', '')
 
     return text
