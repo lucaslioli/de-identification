@@ -38,3 +38,11 @@ To increase the number of experiments and compare the results using other datase
 To run the algorithm, use the following command. The option ```check``` is used to indicate the nedeed to print part of the labels tagged in the end. The option ```verbose``` indicate the needed to print the verbose during the training.
 
     $ python3 crf.py <dataset> [-check] [-verbose]
+
+## Experiments
+
+Initial experiments were made only to identify in text records when a token is, or not, a PHI (Protected Health Information).
+
+The results using the MEDDOCAN dataset were oddly good. To check the performance of the algorithm, other experiments were made using the [i2b2 2014](https://www.i2b2.org/NLP/HeartDisease/) dataset, discharged for De-identification Shared Task. The results weren't so great, but were also good. Analysing MEDDOCAN dataset, it can be observed that all text records have been writen in a structured form, with labels to indicate information as "nombre, apellidos, médicos, etc". This structure make really easy to a CRF algorithm identify what are or not a PHI into the text.
+
+To test the performance of the algorithm over spanish language, a harder version of MEDDOCAN dataset has been built. In that version, all labels that identify any kind of PHI were removed. This experiment reduced considerable the results for this dataset. The algorithm to generate the harder MEDDOCAN is available into ```resources``` folder.
