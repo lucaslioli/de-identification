@@ -12,6 +12,12 @@ def set_params(args):
         params['DATA_PATH'] = "dataset/MEDDOCAN"
         params['LANGUAGE'] = "spanish"
 
+    # MEDDOCAN hard dataset settings
+    elif(args[1] == "meddocan-hard"):
+        params['POS_TAGGER'] = "spanish-ud"
+        params['DATA_PATH'] = "dataset/MEDDOCAN-hard"
+        params['LANGUAGE'] = "spanish"
+
     # i2b2 dataset settings
     elif(args[1] == "i2b2"):
         params['POS_TAGGER'] = "english-bidirectional-distsim"
