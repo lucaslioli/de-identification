@@ -25,12 +25,12 @@ As part of the requirements, it's needed to download the respectively POS tagger
 
 ## Settings
 
-To increase the number of experiments and compare the results using other datasets, some params were defined to allow an easy change of the dataset used. The file ```config.py``` can be ajusted as your needs, as the following settings.
+To increase the number of experiments and compare the results using other datasets, some params were defined to allow an easy change of the dataset used. The file ```crfconfig.py``` can be ajusted as your needs, as the following settings.
 
 * ```LANGUAGE``` - Dataset language
 * ```DATA_PATH``` - Path to folder were the dataset is located
 * ```STANFORD_PATH``` - Path to the folder were Stanford NLP POS Tagger is located
-* ```POS_TAGGER``` - The suitable tagger for dataset language (located inside ```models``` folder) 
+* ```POS_TAGGER``` - The suitable tagger for dataset language (located inside ```models``` folder)
 * ```CRF_MODEL``` - The name that will be used to save the CRF model.
 
 ## Run

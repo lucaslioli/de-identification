@@ -8,7 +8,7 @@ from nltk.tag.stanford import StanfordPOSTagger         # Methods generating Par
 from sklearn.model_selection import train_test_split    # Divide train and test set
 from sklearn.metrics import classification_report, confusion_matrix # Evaluate the results and print the confusion matrix
 
-from config import *
+from crfconfig import *
 from resources.text_processing import simple_cleaner
 
 # A function to prepare the data to fit with the need format
