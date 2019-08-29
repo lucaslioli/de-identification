@@ -5,8 +5,7 @@ COLNAME = "NOME"
 
 if __name__ == '__main__':
 
-    stNames = []
-    ndNames = []
+    allNames = {}
 
     prep={"de", "da"}
 
@@ -16,18 +15,14 @@ if __name__ == '__main__':
         for row in reader:
             row[COLNAME] = row[COLNAME].replace("\"", "").split()
             row[COLNAME] = [w for w in row[COLNAME] if w not in prep]
-
-            first = row[COLNAME][0]
-            last = row[COLNAME][1:]
             
-            if(first not in stNames):
-                stNames.append(first)
-            
-            for name in last:
-                if(name not in ndNames):
-                    ndNames.append(name)
+            for name in row[COLNAME]:
+                if(name not in allNames.keys()):
+                    allNames[name] = 1
+                else:
+                    allNames[name] = allNames[name]+1
 
-    print(stNames)
-    print(ndNames)
+    for key, value in allNames.items():
+        print ("{}, {}".format(key, value))
 
     exit()
