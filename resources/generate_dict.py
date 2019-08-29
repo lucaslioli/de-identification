@@ -7,7 +7,7 @@ if __name__ == '__main__':
 
     allNames = {}
 
-    prep={"de", "da"}
+    prep={"da", "de", "dos", "e"}
 
     with open(FILEPATH) as csvfile:
         reader = csv.DictReader(csvfile)
