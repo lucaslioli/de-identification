@@ -1,6 +1,6 @@
 import csv
 
-FILEPATH = "hcpa/DADOS_HPCA/DADOS/Tabela 1 - PACIENTE/DADOS_1.csv"
+FILEPATH = "resources/gazetteer/dados.csv"
 COLNAME = "NOME"
 
 if __name__ == '__main__':
