@@ -13,8 +13,8 @@ if __name__ == '__main__':
         reader = csv.DictReader(csvfile)
 
         for row in reader:
-            row[COLNAME] = row[COLNAME].replace("\"", "").split()
-            row[COLNAME] = [w.lower() for w in row[COLNAME] if w not in prep]
+            row[COLNAME] = row[COLNAME].replace("\"", "").lower().split()
+            row[COLNAME] = [w for w in row[COLNAME] if w not in prep]
             
             for name in row[COLNAME]:
                 if(name not in allNames.keys()):
