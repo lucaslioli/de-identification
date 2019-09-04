@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
         for row in reader:
             row[COLNAME] = row[COLNAME].replace("\"", "").split()
-            row[COLNAME] = [w for w in row[COLNAME] if w not in prep]
+            row[COLNAME] = [w.lower() for w in row[COLNAME] if w not in prep]
             
             for name in row[COLNAME]:
                 if(name not in allNames.keys()):
