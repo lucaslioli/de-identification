@@ -26,21 +26,19 @@ def set_params(args):
     else:
         return {}
 
+    params['PRINT_VERBOSE'] = False
+    params['PRINT_CHECK'] = False
+
     # Settings to print (or not) the training verbose and check labels
     if(len(args) == 3):
         if(args[2] == "-verbose"):
             params['PRINT_VERBOSE'] = True
-            params['PRINT_CHECK'] = False
 
         elif(args[2] == "-check"):
-            params['PRINT_VERBOSE'] = False
             params['PRINT_CHECK'] = True
 
     elif(len(args) == 4):
         params['PRINT_VERBOSE'] = True
         params['PRINT_CHECK'] = True
-    else:
-        params['PRINT_VERBOSE'] = False
-        params['PRINT_CHECK'] = False
 
     return params
